@@ -35,7 +35,7 @@ const userSchema = new mongoose.Schema({
     },
 
     salt: {
-        type: Number
+        type: String
     },
     about: { type: String },
     role: {
@@ -57,14 +57,14 @@ userSchema.virtual('password')
     .set(function(password){
         //Create a temporary a variable called password
         this._password = password
-        // generate salt
-        this.Salt = this.makeSalt()
+        this.salt = this.makeSalt()
         // encrypt password
         this.hashed_password = this.encryptPassword(password)
     })
     .get(function(){
         return this._password
     })
+    
 
 userSchema.methods = {
     authenticate: function(plaintext) {
@@ -73,15 +73,16 @@ userSchema.methods = {
     encryptPassword: function(password) {
         if (!password) return ''
         try {
-            return crypto.createHmac('sha1', this.Salt)
+            return crypto.createHmac('sha256',  this.salt)
                         .update(password)
                         .digest('hex')
         } catch (err) {
+            console.error('error while crypting password   : ' + err)
             return ''
         }
     },
     makeSalt: function() {
-        return Math.round(new Date().valueOf() * Math.random()) + ''
+        return ('seoblog_' + Math.round(new Date().valueOf() * Math.random()) )
     }
 }
 
