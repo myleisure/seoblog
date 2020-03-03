@@ -3,6 +3,8 @@ const shortId = require('shortid')
 const jwt = require('jsonwebtoken')
 const expressJwt = require('express-jwt')
 
+const TOKEN_COOKIE_NAME = 'token';
+
 exports.signUp = (req, res) => {
     User.findOne({email: req.body.email}).exec((err, user) => {
         if (user) {
@@ -54,7 +56,7 @@ exports.signIn = (req, res) => {
          const token = jwt.sign({_id: user.id}, process.env.JWT_SECRET, {expiresIn: '1d'})
 
         //  adding token to cookie with a expiration delai
-         res.cookie('token', token, { expiresIn: '1d' })
+         res.cookie(TOKEN_COOKIE_NAME, token, { expiresIn: '1d' })
          const {_id, username, name, email, role} = user
 
          return res.json({
@@ -63,9 +65,15 @@ exports.signIn = (req, res) => {
          })
 
     })
-
-    
-
-   
-
 }
+
+exports.signout = (req, res) => {
+    res.clearCookie(TOKEN_COOKIE_NAME)
+    res.json({
+        message: 'Sign out success'
+    })
+}
+
+exports.requireSignin = expressJwt({
+    secret: process.env.JWT_SECRET
+})
